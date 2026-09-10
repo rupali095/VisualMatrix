@@ -1,0 +1,2662 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+   content="width=device-width, initial-scale=1.0">
+
+<title>Folder Image Matrix</title>
+
+<style>
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --col-width: 200px;
+}
+
+body {
+
+    margin: 0;
+
+    padding: 20px;
+
+    font-family: Arial, sans-serif;
+
+    background: #f5f5f5;
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+.controls {
+
+    background: white;
+
+    padding: 15px;
+
+    border-radius: 8px;
+
+    margin-bottom: 15px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+    box-shadow:
+        0 2px 8px
+        rgba(0,0,0,0.08);
+}
+
+
+button {
+
+    border: none;
+
+    border-radius: 5px;
+
+    padding: 9px 14px;
+
+    background: #3498db;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 14px;
+}
+
+
+button:hover {
+
+    background: #2980b9;
+
+}
+
+
+.clear-btn {
+
+    background: #e74c3c;
+}
+
+
+.clear-btn:hover {
+
+    background: #c0392b;
+}
+
+
+.export-btn {
+
+    background: #27ae60;
+}
+
+
+.export-btn:hover {
+
+    background: #219150;
+}
+
+
+.select-btn {
+
+    background: #8e44ad;
+}
+
+
+.select-btn:hover {
+
+    background: #71368a;
+}
+
+
+/* =========================================================
+   JSON IMPORT BUTTON
+========================================================= */
+
+.json-btn {
+
+    background: #f39c12;
+}
+
+
+.json-btn:hover {
+
+    background: #d68910;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status {
+
+    background: white;
+
+    padding: 12px 15px;
+
+    border-radius: 6px;
+
+    margin-bottom: 15px;
+
+    color: #555;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   ZOOM
+========================================================= */
+
+.zoom {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-left: 10px;
+}
+
+
+.zoom input {
+
+    width: 180px;
+}
+
+
+/* =========================================================
+   TABLE CONTAINER
+========================================================= */
+
+.table-container {
+
+    width: 100%;
+
+    max-height: 80vh;
+
+    overflow: auto;
+
+    background: white;
+
+    border-radius: 8px;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+table {
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+
+    width: max-content;
+}
+
+
+th,
+td {
+
+    width: var(--col-width);
+
+    min-width: var(--col-width);
+
+    max-width: var(--col-width);
+
+    border: 1px solid #ddd;
+
+    text-align: center;
+
+    vertical-align: top;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+th {
+
+    height: 80px;
+
+    padding: 8px;
+
+    background: #2c3e50;
+
+    color: white;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 10;
+}
+
+
+.folder-name {
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    margin-bottom: 5px;
+
+    word-break: break-word;
+}
+
+
+.checked-count {
+
+    font-size: 12px;
+
+    margin-bottom: 7px;
+}
+
+
+.header-buttons {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 4px;
+}
+
+
+.header-buttons button {
+
+    font-size: 10px;
+
+    padding: 4px 7px;
+}
+
+
+/* =========================================================
+   IMAGE CELL
+========================================================= */
+
+.image-container {
+
+    position: relative;
+
+    width: var(--col-width);
+
+    height: var(--col-width);
+
+    background: #fafafa;
+
+    overflow: hidden;
+}
+
+
+.image-thumbnail {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: contain;
+
+    display: block;
+
+    cursor: pointer;
+}
+
+
+.image-thumbnail:hover {
+
+    opacity: 0.85;
+}
+
+
+/* =========================================================
+   CHECKBOX
+========================================================= */
+
+.image-checkbox {
+
+    position: absolute;
+
+    top: 6px;
+
+    left: 6px;
+
+    width: 18px;
+
+    height: 18px;
+
+    z-index: 5;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   IMPORTED / MARKED IMAGE
+========================================================= */
+
+.image-container.json-marked {
+
+    outline: 4px solid #f39c12;
+
+    outline-offset: -4px;
+}
+
+
+.image-container.json-marked::after {
+
+    content: "JSON";
+
+    position: absolute;
+
+    top: 6px;
+
+    right: 6px;
+
+    background: #f39c12;
+
+    color: white;
+
+    padding: 3px 6px;
+
+    border-radius: 4px;
+
+    font-size: 10px;
+
+    font-weight: bold;
+
+    z-index: 4;
+}
+
+
+/* =========================================================
+   FILENAME
+========================================================= */
+
+.filename {
+
+    position: absolute;
+
+    bottom: 0;
+
+    left: 0;
+
+    right: 0;
+
+    padding: 4px;
+
+    background:
+        rgba(0,0,0,0.65);
+
+    color: white;
+
+    font-size: 11px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   EMPTY CELL
+========================================================= */
+
+.empty-cell {
+
+    width: var(--col-width);
+
+    height: var(--col-width);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #bbb;
+
+    font-size: 22px;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+
+    background: white;
+
+    border-radius: 8px;
+
+    padding: 60px 20px;
+
+    text-align: center;
+
+    color: #777;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    background:
+        rgba(0,0,0,0.92);
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 30px;
+}
+
+
+.modal img {
+
+    max-width: 95vw;
+
+    max-height: 90vh;
+
+    object-fit: contain;
+}
+
+
+.close {
+
+    position: absolute;
+
+    right: 25px;
+
+    top: 10px;
+
+    color: white;
+
+    font-size: 40px;
+
+    cursor: pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- =========================================================
+     CONTROLS
+========================================================= -->
+
+<div class="controls">
+
+```
+<button onclick="selectParentFolder()">
+
+    📁 Select Parent Folder
+
+</button>
+
+
+<button
+    class="select-btn"
+    onclick="selectIndividualFolders()">
+
+    📂 Select Multiple Folders
+
+</button>
+
+
+<button onclick="selectAll()">
+
+    Select All
+
+</button>
+
+
+<button onclick="unselectAll()">
+
+    Unselect All
+
+</button>
+
+
+<button
+    class="clear-btn"
+    onclick="clearAll()">
+
+    Clear
+
+</button>
+
+
+<!-- =====================================================
+     JSON IMPORT
+====================================================== -->
+
+<button
+    class="json-btn"
+    onclick="document.getElementById('jsonFileInput').click()">
+
+    📄 Upload JSON
+
+</button>
+
+
+<input
+    type="file"
+    id="jsonFileInput"
+    accept=".json,application/json"
+    style="display:none"
+    onchange="importJSON(event)"
+>
+
+
+<button
+    class="export-btn"
+    onclick="exportChecked()">
+
+    Export Selected (ui.json)
+
+</button>
+
+
+<div class="zoom">
+
+    <span>
+
+        Column Width:
+
+    </span>
+
+
+    <input
+        type="range"
+        id="zoomSlider"
+        min="100"
+        max="600"
+        value="200">
+
+
+    <span id="zoomValue">
+
+        200px
+
+    </span>
+
+</div>
+```
+
+</div>
+
+<!-- =========================================================
+     STATUS
+========================================================= -->
+
+<div
+    class="status"
+    id="status">
+
+```
+Select a parent folder.
+```
+
+</div>
+
+<!-- =========================================================
+     TABLE
+========================================================= -->
+
+<div class="table-container">
+
+<table>
+
+<thead>
+
+<tr id="headerRow"></tr>
+
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
+
+</div>
+
+<!-- =========================================================
+     EMPTY STATE
+========================================================= -->
+
+<div
+    class="empty-state"
+    id="emptyState">
+
+```
+<h2>
+
+    Image Matrix
+
+</h2>
+
+
+<p>
+
+    Select a parent folder containing
+    multiple image folders.
+
+</p>
+
+
+<p>
+
+    Example:
+
+</p>
+
+
+<pre>
+```
+
+dataset/
+1/
+2/
+3/
+4/
+
+```
+</pre>
+```
+
+</div>
+
+<!-- =========================================================
+     MODAL
+========================================================= -->
+
+<div
+    class="modal"
+    id="modal">
+
+```
+<span
+    class="close"
+    onclick="closeModal()">
+
+    ×
+
+</span>
+
+
+<img
+    id="modalImg">
+```
+
+</div>
+
+<script>
+
+
+/* =========================================================
+   GLOBAL DATA
+========================================================= */
+
+let data = {};
+
+let currentFolders = [];
+
+let objectUrls = [];
+
+
+/*
+    Tracks images that were marked by imported JSON.
+
+    Key format:
+
+        basename|||folderName
+
+*/
+
+let jsonMarkedImages = new Set();
+
+
+const validExtensions = [
+
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp"
+
+];
+
+
+/* =========================================================
+   SELECT PARENT FOLDER
+========================================================= */
+
+async function selectParentFolder() {
+
+
+    /*
+        File System Access API
+        supported by Chrome / Edge.
+    */
+
+    if (!window.showDirectoryPicker) {
+
+        alert(
+            "Your browser does not support the folder picker. " +
+            "Please use Google Chrome or Microsoft Edge."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+
+        const rootHandle =
+            await window.showDirectoryPicker();
+
+
+        clearAll();
+
+
+        /*
+            Read ONLY immediate
+            subdirectories.
+
+            Example:
+
+            dataset/
+                1/
+                2/
+                3/
+                4/
+
+            becomes:
+
+                1
+                2
+                3
+                4
+
+            columns.
+        */
+
+        for await (
+            const [
+                name,
+                handle
+            ]
+            of rootHandle.entries()
+        ) {
+
+
+            if (
+                handle.kind !== "directory"
+            ) {
+
+                continue;
+
+            }
+
+
+            await readFolder(
+                handle,
+                name
+            );
+
+        }
+
+
+        currentFolders.sort(
+            naturalSort
+        );
+
+
+        renderTable();
+
+        updateStatus();
+
+    }
+    catch (error) {
+
+
+        console.error(error);
+
+
+        /*
+            User cancelled picker.
+        */
+
+        if (
+            error.name !==
+            "AbortError"
+        ) {
+
+            alert(
+                "Error reading folder: " +
+                error.message
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   READ ONE FOLDER
+========================================================= */
+
+async function readFolder(
+    folderHandle,
+    folderName
+) {
+
+
+    /*
+        Add folder as column.
+    */
+
+    if (
+        !currentFolders.includes(
+            folderName
+        )
+    ) {
+
+        currentFolders.push(
+            folderName
+        );
+
+    }
+
+
+    /*
+        Read files directly inside
+        this folder.
+    */
+
+    for await (
+        const [
+            name,
+            handle
+        ]
+        of folderHandle.entries()
+    ) {
+
+
+        /*
+            Ignore subdirectories.
+        */
+
+        if (
+            handle.kind !== "file"
+        ) {
+
+            continue;
+
+        }
+
+
+        if (
+            !isValidImage(name)
+        ) {
+
+            continue;
+
+        }
+
+
+        /*
+            Get actual File object.
+        */
+
+        const file =
+            await handle.getFile();
+
+
+        /*
+            Filename without extension.
+        */
+
+        const basename =
+            name.replace(
+                /\.[^/.]+$/,
+                ""
+            );
+
+
+        /*
+            Browser URL.
+        */
+
+        const url =
+            URL.createObjectURL(
+                file
+            );
+
+
+        objectUrls.push(
+            url
+        );
+
+
+        /*
+            Create basename.
+        */
+
+        if (
+            !data[basename]
+        ) {
+
+            data[basename] = {};
+
+        }
+
+
+        /*
+            Store image.
+        */
+
+        data[basename][
+            folderName
+        ] = {
+
+            file: file,
+
+            url: url,
+
+            filename: name,
+
+            relativePath:
+                folderName +
+                "/" +
+                name
+
+        };
+
+    }
+
+}
+
+
+/* =========================================================
+   SELECT MULTIPLE INDIVIDUAL FOLDERS
+========================================================= */
+
+async function selectIndividualFolders() {
+
+
+    if (!window.showDirectoryPicker) {
+
+        alert(
+            "Please use Google Chrome or Microsoft Edge."
+        );
+
+        return;
+
+    }
+
+
+    /*
+        Clear existing data.
+    */
+
+    clearAll();
+
+
+    let keepSelecting = true;
+
+
+    while (keepSelecting) {
+
+
+        try {
+
+
+            const folderHandle =
+                await window.showDirectoryPicker();
+
+
+            /*
+                Read this folder.
+
+                The folder itself becomes
+                one column.
+            */
+
+            await readFolder(
+                folderHandle,
+                folderHandle.name
+            );
+
+
+            /*
+                Ask whether another
+                folder should be added.
+            */
+
+            keepSelecting =
+                confirm(
+                    "Folder '" +
+                    folderHandle.name +
+                    "' added.\n\n" +
+                    "Click OK to add another folder.\n" +
+                    "Click Cancel to display the matrix."
+                );
+
+        }
+        catch (error) {
+
+
+            if (
+                error.name ===
+                "AbortError"
+            ) {
+
+                break;
+
+            }
+
+
+            console.error(error);
+
+            break;
+
+        }
+
+    }
+
+
+    currentFolders.sort(
+        naturalSort
+    );
+
+
+    renderTable();
+
+    updateStatus();
+
+}
+
+
+/* =========================================================
+   VALID IMAGE
+========================================================= */
+
+function isValidImage(filename) {
+
+
+    const lower =
+        filename.toLowerCase();
+
+
+    return validExtensions.some(
+        extension =>
+            lower.endsWith(
+                extension
+            )
+    );
+
+}
+
+
+/* =========================================================
+   NATURAL SORT
+========================================================= */
+
+function naturalSort(a, b) {
+
+
+    return a.localeCompare(
+        b,
+        undefined,
+        {
+            numeric: true,
+            sensitivity: "base"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   RENDER TABLE
+========================================================= */
+
+function renderTable() {
+
+
+    const headerRow =
+        document.getElementById(
+            "headerRow"
+        );
+
+
+    const tableBody =
+        document.getElementById(
+            "tableBody"
+        );
+
+
+    const emptyState =
+        document.getElementById(
+            "emptyState"
+        );
+
+
+    headerRow.innerHTML = "";
+
+    tableBody.innerHTML = "";
+
+
+    if (
+        currentFolders.length === 0
+    ) {
+
+        emptyState.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    emptyState.style.display =
+        "none";
+
+
+    /* =====================================================
+       HEADERS
+    ===================================================== */
+
+    currentFolders.forEach(
+        (folder, index) => {
+
+
+            const th =
+                document.createElement(
+                    "th"
+                );
+
+
+            th.innerHTML = `
+
+                <div class="folder-name">
+
+                    ${escapeHtml(folder)}
+
+                </div>
+
+
+                <div
+                    class="checked-count"
+                    id="count-${index}">
+
+                    Checked: 0
+
+                </div>
+
+
+                <div class="header-buttons">
+
+
+                    <button
+                        onclick="selectColumn(${index})">
+
+                        Select
+
+                    </button>
+
+
+                    <button
+                        onclick="unselectColumn(${index})">
+
+                        Clear
+
+                    </button>
+
+
+                </div>
+
+            `;
+
+
+            headerRow.appendChild(
+                th
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       UNIQUE BASENAMES
+    ===================================================== */
+
+    const basenames =
+        Object.keys(data)
+            .sort(naturalSort);
+
+
+    /* =====================================================
+       ROWS
+    ===================================================== */
+
+    basenames.forEach(
+        basename => {
+
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.dataset.basename =
+                basename;
+
+
+            /*
+                Loop over currentFolders.
+
+                This guarantees:
+
+                1 folder = 1 column
+            */
+
+            currentFolders.forEach(
+                (folder, columnIndex) => {
+
+
+                    const td =
+                        document.createElement(
+                            "td"
+                        );
+
+
+                    const imageData =
+                        data[
+                            basename
+                        ][
+                            folder
+                        ];
+
+
+                    if (
+                        imageData
+                    ) {
+
+
+                        createImageCell(
+                            td,
+                            imageData,
+                            columnIndex,
+                            basename,
+                            folder
+                        );
+
+                    }
+                    else {
+
+
+                        td.className =
+                            "empty-cell";
+
+
+                        td.innerHTML =
+                            "-";
+
+                    }
+
+
+                    row.appendChild(
+                        td
+                    );
+
+                }
+            );
+
+
+            tableBody.appendChild(
+                row
+            );
+
+        }
+    );
+
+
+    /*
+        Apply JSON marks after rendering.
+    */
+
+    applyJSONMarks();
+
+
+    updateCount();
+
+}
+
+
+/* =========================================================
+   CREATE IMAGE CELL
+========================================================= */
+
+function createImageCell(
+    td,
+    imageData,
+    columnIndex,
+    basename,
+    folderName
+) {
+
+
+    const container =
+        document.createElement(
+            "div"
+        );
+
+
+    container.className =
+        "image-container";
+
+
+    /*
+        Store basename/folder on
+        container as well.
+    */
+
+    container.dataset.basename =
+        basename;
+
+    container.dataset.folder =
+        folderName;
+
+
+    /* =====================================================
+       CHECKBOX
+    ===================================================== */
+
+    const checkbox =
+        document.createElement(
+            "input"
+        );
+
+
+    checkbox.type =
+        "checkbox";
+
+
+    checkbox.className =
+        "image-checkbox";
+
+
+    checkbox.dataset.column =
+        columnIndex;
+
+
+    checkbox.dataset.basename =
+        basename;
+
+
+    checkbox.dataset.folder =
+        folderName;
+
+
+    checkbox.addEventListener(
+        "click",
+        event => {
+
+            event.stopPropagation();
+
+            updateCount();
+
+        }
+    );
+
+
+    /* =====================================================
+       IMAGE
+    ===================================================== */
+
+    const img =
+        document.createElement(
+            "img"
+        );
+
+
+    img.src =
+        imageData.url;
+
+
+    img.className =
+        "image-thumbnail";
+
+
+    img.loading =
+        "lazy";
+
+
+    img.alt =
+        imageData.filename;
+
+
+    img.onclick =
+        () => openModal(
+            imageData.url
+        );
+
+
+    /* =====================================================
+       FILENAME
+    ===================================================== */
+
+    const filename =
+        document.createElement(
+            "div"
+        );
+
+
+    filename.className =
+        "filename";
+
+
+    filename.textContent =
+        imageData.filename;
+
+
+    filename.title =
+        imageData.filename;
+
+
+    /* =====================================================
+       APPEND
+    ===================================================== */
+
+    container.appendChild(
+        checkbox
+    );
+
+
+    container.appendChild(
+        img
+    );
+
+
+    container.appendChild(
+        filename
+    );
+
+
+    td.appendChild(
+        container
+    );
+
+
+    /*
+        If this image was previously
+        imported from JSON, mark it.
+    */
+
+    const markKey =
+        createJSONMarkKey(
+            basename,
+            folderName
+        );
+
+
+    if (
+        jsonMarkedImages.has(markKey)
+    ) {
+
+        checkbox.checked = true;
+
+        container.classList.add(
+            "json-marked"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE JSON MARK KEY
+========================================================= */
+
+function createJSONMarkKey(
+    basename,
+    folderName
+) {
+
+    return (
+        String(basename) +
+        "|||" +
+        String(folderName)
+    );
+
+}
+
+
+/* =========================================================
+   IMPORT JSON
+========================================================= */
+
+function importJSON(event) {
+
+
+    const file =
+        event.target.files[0];
+
+
+    if (!file) {
+
+        return;
+
+    }
+
+
+    /*
+        Do not allow import before
+        folders are loaded.
+    */
+
+    if (
+        currentFolders.length === 0
+    ) {
+
+        alert(
+            "Please select a folder first."
+        );
+
+        event.target.value = "";
+
+        return;
+
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        function(e) {
+
+
+            try {
+
+
+                const importedData =
+                    JSON.parse(
+                        e.target.result
+                    );
+
+
+                markImagesFromJSON(
+                    importedData
+                );
+
+
+            }
+            catch (error) {
+
+
+                console.error(error);
+
+
+                alert(
+                    "Invalid JSON file.\n\n" +
+                    error.message
+                );
+
+            }
+
+        };
+
+
+    reader.readAsText(file);
+
+
+    /*
+        Allow uploading the same
+        JSON file again.
+    */
+
+    event.target.value = "";
+
+}
+
+
+/* =========================================================
+   MARK IMAGES FROM JSON
+========================================================= */
+
+function markImagesFromJSON(
+    importedData
+) {
+
+
+    if (
+        !importedData ||
+        typeof importedData !== "object" ||
+        Array.isArray(importedData)
+    ) {
+
+
+        alert(
+            "Invalid JSON format.\n\n" +
+            "Expected the same format as ui.json."
+        );
+
+
+        return;
+
+    }
+
+
+    /*
+        Clear previous JSON marks.
+    */
+
+    jsonMarkedImages.clear();
+
+
+    /*
+        Clear all existing checkbox
+        selections.
+
+        This makes the uploaded JSON
+        become the new selection.
+    */
+
+    document
+        .querySelectorAll(
+            ".image-checkbox"
+        )
+        .forEach(
+            checkbox => {
+
+                checkbox.checked =
+                    false;
+
+            }
+        );
+
+
+    /*
+        Remove old JSON visual marks.
+    */
+
+    document
+        .querySelectorAll(
+            ".image-container"
+        )
+        .forEach(
+            container => {
+
+                container.classList.remove(
+                    "json-marked"
+                );
+
+            }
+        );
+
+
+    let matched = 0;
+
+    let notMatched = 0;
+
+    let totalJSONEntries = 0;
+
+
+    /*
+        Loop through JSON:
+
+        {
+            "basename": {
+                "folder": "folder/image.png"
+            }
+        }
+    */
+
+    Object.entries(
+        importedData
+    )
+    .forEach(
+        ([basename, folders]) => {
+
+
+            if (
+                !folders ||
+                typeof folders !== "object" ||
+                Array.isArray(folders)
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+                Multiple folders can exist
+                for the same basename.
+            */
+
+            Object.entries(
+                folders
+            )
+            .forEach(
+                ([folderName, jsonPath]) => {
+
+
+                    totalJSONEntries++;
+
+
+                    /*
+                        Create unique key.
+                    */
+
+                    const markKey =
+                        createJSONMarkKey(
+                            basename,
+                            folderName
+                        );
+
+
+                    /*
+                        First verify that the
+                        folder exists.
+                    */
+
+                    const columnIndex =
+                        currentFolders.indexOf(
+                            folderName
+                        );
+
+
+                    if (
+                        columnIndex === -1
+                    ) {
+
+                        notMatched++;
+
+                        return;
+
+                    }
+
+
+                    /*
+                        Verify basename exists
+                        in the selected folder.
+                    */
+
+                    if (
+                        !data[basename] ||
+                        !data[basename][folderName]
+                    ) {
+
+                        notMatched++;
+
+                        return;
+
+                    }
+
+
+                    /*
+                        Mark the image.
+                    */
+
+                    jsonMarkedImages.add(
+                        markKey
+                    );
+
+
+                    const row =
+                        document.querySelector(
+                            `tr[data-basename="${CSS.escape(basename)}"]`
+                        );
+
+
+                    if (!row) {
+
+                        notMatched++;
+
+                        return;
+
+                    }
+
+
+                    const checkbox =
+                        row.querySelector(
+                            `.image-checkbox[data-column="${columnIndex}"]`
+                        );
+
+
+                    if (!checkbox) {
+
+                        notMatched++;
+
+                        return;
+
+                    }
+
+
+                    checkbox.checked =
+                        true;
+
+
+                    const container =
+                        checkbox.closest(
+                            ".image-container"
+                        );
+
+
+                    if (container) {
+
+                        container.classList.add(
+                            "json-marked"
+                        );
+
+                    }
+
+
+                    matched++;
+
+                }
+            );
+
+        }
+    );
+
+
+    updateCount();
+
+
+    /*
+        Update status.
+    */
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    status.innerHTML = `
+
+        <strong>${matched}</strong>
+        images marked from JSON
+
+        &nbsp; | &nbsp;
+
+        <strong>${notMatched}</strong>
+        not found
+
+        &nbsp; | &nbsp;
+
+        <strong>${totalJSONEntries}</strong>
+        JSON entries
+
+        &nbsp; | &nbsp;
+
+        <strong>${currentFolders.length}</strong>
+        folders
+
+    `;
+
+
+    alert(
+        "JSON imported successfully.\n\n" +
+
+        "JSON entries: " +
+        totalJSONEntries +
+
+        "\nMatched: " +
+        matched +
+
+        "\nNot found: " +
+        notMatched
+    );
+
+}
+
+
+/* =========================================================
+   APPLY JSON MARKS
+========================================================= */
+
+function applyJSONMarks() {
+
+
+    document
+        .querySelectorAll(
+            ".image-checkbox"
+        )
+        .forEach(
+            checkbox => {
+
+
+                const basename =
+                    checkbox.dataset.basename;
+
+
+                const folderName =
+                    checkbox.dataset.folder;
+
+
+                const markKey =
+                    createJSONMarkKey(
+                        basename,
+                        folderName
+                    );
+
+
+                if (
+                    jsonMarkedImages.has(
+                        markKey
+                    )
+                ) {
+
+
+                    checkbox.checked =
+                        true;
+
+
+                    const container =
+                        checkbox.closest(
+                            ".image-container"
+                        );
+
+
+                    if (container) {
+
+                        container.classList.add(
+                            "json-marked"
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   SELECT ALL
+========================================================= */
+
+function selectAll() {
+
+
+    document
+        .querySelectorAll(
+            ".image-checkbox"
+        )
+        .forEach(
+            checkbox => {
+
+                checkbox.checked =
+                    true;
+
+            }
+        );
+
+
+    updateCount();
+
+}
+
+
+/* =========================================================
+   UNSELECT ALL
+========================================================= */
+
+function unselectAll() {
+
+
+    document
+        .querySelectorAll(
+            ".image-checkbox"
+        )
+        .forEach(
+            checkbox => {
+
+                checkbox.checked =
+                    false;
+
+            }
+        );
+
+
+    updateCount();
+
+}
+
+
+/* =========================================================
+   SELECT COLUMN
+========================================================= */
+
+function selectColumn(
+    columnIndex
+) {
+
+
+    document
+        .querySelectorAll(
+            ".image-checkbox"
+        )
+        .forEach(
+            checkbox => {
+
+
+                if (
+                    Number(
+                        checkbox.dataset.column
+                    ) === columnIndex
+                ) {
+
+
+                    checkbox.checked =
+                        true;
+
+                }
+
+            }
+        );
+
+
+    updateCount();
+
+}
+
+
+/* =========================================================
+   UNSELECT COLUMN
+========================================================= */
+
+function unselectColumn(
+    columnIndex
+) {
+
+
+    document
+        .querySelectorAll(
+            ".image-checkbox"
+        )
+        .forEach(
+            checkbox => {
+
+
+                if (
+                    Number(
+                        checkbox.dataset.column
+                    ) === columnIndex
+                ) {
+
+
+                    checkbox.checked =
+                        false;
+
+                }
+
+            }
+        );
+
+
+    updateCount();
+
+}
+
+
+/* =========================================================
+   UPDATE COUNT
+========================================================= */
+
+function updateCount() {
+
+
+    const counts =
+        new Array(
+            currentFolders.length
+        ).fill(0);
+
+
+    document
+        .querySelectorAll(
+            ".image-checkbox"
+        )
+        .forEach(
+            checkbox => {
+
+
+                if (
+                    checkbox.checked
+                ) {
+
+
+                    const column =
+                        Number(
+                            checkbox.dataset.column
+                        );
+
+
+                    counts[column]++;
+
+                }
+
+            }
+        );
+
+
+    counts.forEach(
+        (count, index) => {
+
+
+            const element =
+                document.getElementById(
+                    "count-" + index
+                );
+
+
+            if (element) {
+
+
+                element.textContent =
+                    "Checked: " + count;
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   EXPORT
+========================================================= */
+
+function exportChecked() {
+
+
+    const result = {};
+
+
+    const rows =
+        document.querySelectorAll(
+            "#tableBody tr"
+        );
+
+
+    rows.forEach(
+        row => {
+
+
+            const basename =
+                row.dataset.basename;
+
+
+            const checkboxes =
+                row.querySelectorAll(
+                    ".image-checkbox"
+                );
+
+
+            checkboxes.forEach(
+                checkbox => {
+
+
+                    if (
+                        !checkbox.checked
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const columnIndex =
+                        Number(
+                            checkbox.dataset.column
+                        );
+
+
+                    const folder =
+                        currentFolders[
+                            columnIndex
+                        ];
+
+
+                    const imageData =
+                        data[
+                            basename
+                        ][
+                            folder
+                        ];
+
+
+                    if (
+                        !result[basename]
+                    ) {
+
+                        result[basename] =
+                            {};
+
+                    }
+
+
+                    /*
+                        Save path.
+
+                        Example:
+
+                        {
+                            "shirt001": {
+                                "1":
+                                "1/shirt001.png",
+
+                                "2":
+                                "2/shirt001.png"
+                            }
+                        }
+                    */
+
+                    result[
+                        basename
+                    ][
+                        folder
+                    ] =
+                        imageData.relativePath;
+
+                }
+
+            );
+
+        }
+    );
+
+
+    if (
+        Object.keys(result).length === 0
+    ) {
+
+
+        alert(
+            "No images selected."
+        );
+
+
+        return;
+
+    }
+
+
+    const blob =
+        new Blob(
+            [
+                JSON.stringify(
+                    result,
+                    null,
+                    2
+                )
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "ui.json";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function updateStatus() {
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    let totalImages = 0;
+
+
+    Object.values(data)
+        .forEach(
+            entry => {
+
+
+                totalImages +=
+                    Object.keys(
+                        entry
+                    ).length;
+
+            }
+        );
+
+
+    status.innerHTML = `
+
+        <strong>
+            ${currentFolders.length}
+        </strong>
+
+        folders
+
+        &nbsp; | &nbsp;
+
+        <strong>
+            ${totalImages}
+        </strong>
+
+        images
+
+        &nbsp; | &nbsp;
+
+        <strong>
+            ${Object.keys(data).length}
+        </strong>
+
+        unique filenames
+
+    `;
+
+}
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+function clearAll() {
+
+
+    objectUrls.forEach(
+        url => {
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        }
+    );
+
+
+    objectUrls = [];
+
+
+    data = {};
+
+
+    currentFolders = [];
+
+
+    jsonMarkedImages.clear();
+
+
+    document.getElementById(
+        "headerRow"
+    ).innerHTML = "";
+
+
+    document.getElementById(
+        "tableBody"
+    ).innerHTML = "";
+
+
+    document.getElementById(
+        "emptyState"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "status"
+    ).textContent =
+        "Select a parent folder.";
+
+}
+
+
+/* =========================================================
+   ZOOM
+========================================================= */
+
+const zoomSlider =
+    document.getElementById(
+        "zoomSlider"
+    );
+
+
+const zoomValue =
+    document.getElementById(
+        "zoomValue"
+    );
+
+
+zoomSlider.addEventListener(
+    "input",
+    () => {
+
+
+        const value =
+            zoomSlider.value + "px";
+
+
+        zoomValue.textContent =
+            value;
+
+
+        document.documentElement
+            .style
+            .setProperty(
+                "--col-width",
+                value
+            );
+
+    }
+);
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+const modal =
+    document.getElementById(
+        "modal"
+    );
+
+
+const modalImg =
+    document.getElementById(
+        "modalImg"
+    );
+
+
+function openModal(src) {
+
+
+    modalImg.src =
+        src;
+
+
+    modal.style.display =
+        "flex";
+
+}
+
+
+function closeModal() {
+
+
+    modal.style.display =
+        "none";
+
+
+    modalImg.src =
+        "";
+
+}
+
+
+modal.addEventListener(
+    "click",
+    event => {
+
+
+        if (
+            event.target === modal
+        ) {
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+</script>
+
+</body>
+
+</html>
